@@ -1,0 +1,55 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# expo
+.expo/
+.expo-shared/
+dist/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+ios/.xcode.env.local
+
+# native build output
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.cxx/
+ios/Pods/
+ios/build/
+*.hprof
+
+# env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+
+# logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# editors / os
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# vercel
+.vercel
+
+# test / build artifacts
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo

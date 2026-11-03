@@ -1,0 +1,36 @@
+{
+  "name": "salon",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Salon - daily service tracking, live queue, billing and owner analytics for salons and stylists.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "mobile": "npm run start -w @salon/mobile",
+    "android": "npm run android -w @salon/mobile",
+    "ios": "npm run ios -w @salon/mobile",
+    "web": "npm run web -w @salon/mobile",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
+    "db:generate": "npm run generate -w @salon/db",
+    "db:migrate": "npm run migrate -w @salon/db",
+    "db:seed": "npm run seed -w @salon/db",
+    "db:studio": "npm run studio -w @salon/db",
+    "prebuild": "npm run prebuild -w @salon/mobile"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  },
+  "allowScripts": {
+    "esbuild@0.18.20": true,
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.2": true
+  }
+}

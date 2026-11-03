@@ -1,0 +1,42 @@
+# dependencies
+node_modules/
+
+# expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.metro-health-check*
+
+# native build output lives inside the committed android/ and ios/ folders
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.cxx/
+android/.kotlin/
+ios/Pods/
+ios/build/
+*.orig.*
+
+# signing material — never commit
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo

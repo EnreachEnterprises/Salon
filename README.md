@@ -1,0 +1,92 @@
+# Salon
+
+Daily service tracking, a live queue, billing and owner analytics for a
+single-location hair salon. Android and iOS, one codebase.
+
+A salon management and booking app for Android and iOS. Customers book slots and
+watch a live queue, reception handles walk-ins and billing, staff see their
+clients' history, and the owner sees daily earnings and staff commission
+automatically.
+
+The product definition lives in [`docs/PRD.md`](docs/PRD.md).
+
+## The problems it solves
+
+- **Waiting.** Customers can't tell how long the wait is, so they leave.
+- **Staff accounting.** Commission is calculated by hand from a register at night.
+- **Lost repeat customers.** Nobody reminds a customer when their next haircut is due.
+
+## What it does
+
+- **Customers** book a slot, watch the live queue, and get reminders on email
+  and WhatsApp.
+- **Reception** sees today's bookings, adds walk-ins, and bills in one screen.
+- **Stylists** see their own customers today and six months of their own
+  history.
+- **The owner** sees revenue, services per day, per stylist, commission, and a
+  monthly report.
+
+Eleven top-level screens. No twelfth.
+
+## Stack
+
+| Layer | Choice |
+| --- | --- |
+| Mobile | Expo React Native SDK 58, TypeScript, expo-router |
+| State / data | TanStack Query (5s polling for the queue) |
+| API | Hono on Vercel (added at B1) |
+| Database | Neon Postgres, Drizzle ORM, RLS |
+| Auth | Clerk (email OTP) |
+| Payments | Razorpay |
+| Email | Resend |
+| WhatsApp | Meta WhatsApp Cloud API |
+| Files | Cloudflare R2 |
+
+Money is integer **paise** everywhere. Metrics are computed once, in
+`packages/shared`, and reused by every screen.
+
+## Layout
+
+```
+apps/mobile        Expo app
+packages/shared    money, metrics, time, zod schemas  (vitest)
+packages/db        Drizzle schema, migrations, RLS, seed
+docs/              PRD, architecture, design system, database, API, security,
+                   notifications, roadmap, runbook
+```
+
+## Getting started
+
+```bash
+npm install                                  # from the repo root
+cp packages/db/.env.example packages/db/.env # fill in the Neon URLs
+npm run db:migrate
+npm run db:seed                              # deterministic demo salon
+npm run mobile
+```
+
+Read [`docs/RUNBOOK.md`](docs/RUNBOOK.md) before your first migration, and
+[`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) before your first screen.
+
+## Checks
+
+```bash
+npm run typecheck
+npm test
+```
+
+CI runs both on every push and pull request.
+
+## Status
+
+Block 1, phase P0: the foundation — monorepo, schema, shared logic, theme and
+seed. The migration has not yet been applied to a live Neon database. See
+[`docs/ROADMAP.md`](docs/ROADMAP.md) for what comes next.
+
+## Conventions
+
+- Reuse before creating. No new dependency, table, secret or service without a
+  decision recorded.
+- Validate every external input with a schema before it reaches a service.
+- Every data-driven view handles loading, empty and error.
+- Do not invent a design value. If it is not in the design system, ask.
