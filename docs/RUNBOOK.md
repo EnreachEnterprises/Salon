@@ -25,6 +25,105 @@ npm test                         # vitest in packages/shared
 npm run db:generate              # after any schema change
 ```
 
+## Android toolchain (Windows, this machine)
+
+The SDK lives outside the repo on purpose. Gradle finds it through
+`apps/mobile/android/local.properties`, which is gitignored, so no machine path
+ever reaches GitHub.
+
+| Piece | Location |
+| --- | --- |
+| Android SDK | `D:\Android\Sdk` |
+| cmdline-tools | `D:\Android\Sdk\cmdline-tools\latest` (22.0) |
+| Android Studio | `D:\Android\AndroidStudio` (official ZIP distribution, no installer) |
+| Bundled JDK 21 | `D:\Android\AndroidStudio\jbr` — fallback if Gradle ever refuses Java 25 |
+| JDK actually used | Temurin 25, unpacked flat into `D:\`, so `JAVA_HOME=D:\` |
+
+User-scope environment variables: `ANDROID_HOME` and `ANDROID_SDK_ROOT` point at
+`D:\Android\Sdk`, `JAVA_HOME=D:\`, and `PATH` gains `platform-tools` and
+`cmdline-tools\latest\bin`. Open a new terminal after changing them.
+
+Package versions are not arbitrary — they come from
+`node_modules/react-native/gradle/libs.versions.toml`:
+
+```powershell
+sdkmanager "platform-tools" "platforms;android-37.0" "build-tools;37.0.0" `
+           "ndk;27.1.12297006" "cmake;3.22.1"
+```
+
+Two APKs, two purposes:
+
+```powershell
+cd apps/mobile/android
+
+# debug: fast, needs Metro running (adb reverse tcp:8081 tcp:8081)
+.\gradlew.bat assembleDebug -PreactNativeArchitectures=arm64-v8a
+# -> app\build\outputs\apk\debug\app-debug.apk
+
+# release: standalone, JS bundle embedded, signed with the debug keystore
+.\gradlew.bat assembleRelease -PreactNativeArchitectures=arm64-v8a
+# -> app\build\outputs\apk\release\app-release.apk
+```
+
+Use the release APK to demo on a phone. It is signed with `debug.keystore`, so it
+is for testers only — Play Store uploads come from EAS, never from this file.
+`-PreactNativeArchitectures=arm64-v8a` builds one ABI; drop it for a universal
+APK. The first build compiles reanimated, worklets, gesture-handler and
+expo-modules-core through CMake and takes a long while; later builds reuse
+`android\.gradle` and are minutes.
+
+Install on a phone (Developer Options → USB debugging, then accept the RSA
+prompt):
+
+```powershell
+adb devices                 # must list a device, not "unauthorized"
+adb install -r app-release.apk
+```
+
+### Long paths: replace ninja, not the repo
+
+If the build dies with
+
+```
+ninja: error: Stat(...): Filename longer than 260 characters
+```
+
+the culprit is ninja, not Windows. CMake 3.22.1 bundles ninja 1.10.2, which
+rejects any path of 260 characters or more before it ever calls a Win32 API, so
+the `LongPathsEnabled` registry value (already `1` on this machine) cannot help.
+
+The path is long because CMake mangles the absolute source path into the object
+filename:
+
+```
+...\.cxx\Debug\<hash>\arm64-v8a\rngesturehandler_codegen_autolinked_build\
+  CMakeFiles\react_codegen_rngesturehandler_codegen.dir\
+  E_\Work\Projects\Salon\node_modules\react-native-gesture-handler\
+  shared\shadowNodes\...\RNGestureHandlerDetectorShadowNode.cpp.o
+```
+
+About 345 characters. Moving the repo, `subst`, or a junction recovers only ~40
+of them, so the geometry never fits. Replace ninja instead:
+
+```powershell
+# download ninja-win.zip (1.12.1 or newer) from
+# https://github.com/ninja-build/ninja/releases
+$bin = 'D:\Android\Sdk\cmake\3.22.1\bin'
+Copy-Item "$bin\ninja.exe" "$bin\ninja-1.10.2.exe.bak" -ErrorAction SilentlyContinue
+Copy-Item .\ninja.exe "$bin\ninja.exe" -Force
+& "$bin\ninja.exe" --version      # 1.12.1
+```
+
+Ninja 1.12 prefixes `\\?\` internally, so the length stops mattering. Verify
+before spending an hour on a rebuild — a dry run hits the same `Stat()` calls:
+
+```powershell
+& "$bin\ninja.exe" -C apps\mobile\android\app\.cxx\Debug\<hash>\arm64-v8a -n appmodules
+```
+
+Exit code 0 with no `Stat(` error means the wall is gone. No need to delete
+`.cxx`; just rerun `assembleDebug`.
+
 ## Known local snags
 
 | Symptom | Cause / fix |
@@ -35,6 +134,13 @@ npm run db:generate              # after any schema change
 | `tsc` failure followed by a `NativeCommandError` block | the PowerShell noise is after the real error. Read the `tsc` lines above it. |
 | `TS5101` on `baseUrl` | `baseUrl` is intentionally removed; `paths` are relative to the tsconfig. |
 | `db:seed` exits with "salon already exists" | by design. Drop the database or use a fresh branch. |
+| `Failed to find package platforms;android-37` | Android now ships minor platform versions. Install `platforms;android-37.0`. |
+| `sdkmanager` exits 1 right after "All SDK package licenses accepted" | a broken pipe on Windows; the packages did install. Verify with `sdkmanager --list_installed`. |
+| `SDK location not found` from Gradle | `apps/mobile/android/local.properties` is missing. Create it with `sdk.dir=D\:\\Android\\Sdk`; it is gitignored on purpose. |
+| `adb devices` lists nothing, or shows `unauthorized` | charge-only cable, USB debugging off, or the RSA prompt was dismissed. Revoke USB authorizations and replug. |
+| Android Studio installed into `C:\Program Files` | its NSIS installer ignores `/D=` when it runs elevated. Use the ZIP distribution instead of the `.exe`. |
+| `ninja: error: Stat(...): Filename longer than 260 characters` | CMake 3.22.1 ships ninja 1.10.2, which hard-rejects long paths even with `LongPathsEnabled=1`. Replace `D:\Android\Sdk\cmake\3.22.1\bin\ninja.exe` with 1.12.1+, then rerun the build. See "Long paths: replace ninja, not the repo". |
+| First Gradle run looks hung for ten minutes | it is building native code with CMake. Watch `gradlew.bat --console=plain` output, not the clock. |
 
 ## Migrations
 
