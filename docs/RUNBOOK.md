@@ -62,6 +62,16 @@ one before running anything destructive, not after.
   environment. Secrets live in Vercel, not in the repo.
 - Mobile: EAS build. Internal APK for testers, TestFlight for iOS. A store
   release needs its own build, not an internal one promoted.
+
+  ```
+  cd apps/mobile
+  npx eas build -p android --profile preview    # installable APK
+  npx eas build -p ios --profile preview        # TestFlight, needs Apple account
+  npx eas build -p android --profile production # store build
+  ```
+
+  `preview` produces an APK and skips the store. iOS has no committed `ios/`
+  folder; EAS generates it on a macOS runner from `app.json`.
 - Crons (Vercel): reminder sweep, weekly summary, monthly report, payload purge.
   A cron that fails silently is worse than no cron — every run writes a row.
 
