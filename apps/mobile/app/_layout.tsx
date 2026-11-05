@@ -6,6 +6,7 @@ import { AzeretMono_400Regular, AzeretMono_700Bold, useFonts } from '@expo-googl
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View } from 'react-native';
 
+import { SessionProvider } from '@/session';
 import { ThemeProvider, useTheme } from '@/theme';
 
 // Hold the splash until the typeface is ready. Azeret Mono is the brand;
@@ -29,7 +30,9 @@ export default function RootLayout() {
   return (
     <ThemeProvider initialScheme="dark">
       <SafeAreaProvider>
-        <AppShell />
+        <SessionProvider>
+          <AppShell />
+        </SessionProvider>
       </SafeAreaProvider>
     </ThemeProvider>
   );
@@ -49,6 +52,11 @@ function AppShell() {
         }}
       >
         <Stack.Screen name="index" />
+        <Stack.Screen name="login" options={{ animation: 'fade' }} />
+        <Stack.Screen name="(customer)" />
+        <Stack.Screen name="(reception)" />
+        <Stack.Screen name="(staff)" />
+        <Stack.Screen name="(owner)" />
       </Stack>
     </View>
   );

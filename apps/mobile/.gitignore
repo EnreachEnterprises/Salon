@@ -5,6 +5,7 @@ node_modules/
 .expo/
 dist/
 web-build/
+.export-check/
 expo-env.d.ts
 .metro-health-check*
 
