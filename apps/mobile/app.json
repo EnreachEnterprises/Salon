@@ -15,14 +15,13 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.salon.app",
+      "bundleIdentifier": "com.enreachenterprises.salon",
       "infoPlist": {
         "UIViewControllerBasedStatusBarAppearance": false
       }
     },
     "android": {
-      "package": "com.salon.app",
-      "edgeToEdgeEnabled": true,
+      "package": "com.enreachenterprises.salon",
       "predictiveBackGestureEnabled": false,
       "adaptiveIcon": {
         "backgroundColor": "#F6F5F3",

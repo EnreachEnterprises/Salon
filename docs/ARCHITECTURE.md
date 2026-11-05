@@ -32,6 +32,24 @@ Schema first, UI first, wire the backend last. The front end is built against
 seeded data and a thin mock layer, so screens are proven before the API exists.
 Block 1 produces an installable build; Block 2 replaces the mock with real data.
 
+## Native projects
+
+`android/` is committed. `npx expo prebuild` regenerates it from `app.json` on
+Windows, Linux or macOS, and `.gitignore` inside that folder keeps build output
+and signing material out of git.
+
+`ios/` cannot be generated on Windows, so it is produced by EAS Build, which
+runs prebuild on a macOS runner from the same `app.json`. Nothing about iOS
+lives only on a machine: icons, splash, bundle id and permissions are all in
+config, so the generated project is reproducible. If iOS needs hand edits
+later, generate the folder on macOS and commit it, then keep both native
+folders in sync with `expo prebuild --clean`.
+
+Metro is configured for the workspace: it watches the repo root, resolves
+packages from the hoisted `node_modules`, points `@salon/shared` straight at
+`packages/shared/src`, and strips the NodeNext `.js` suffix on imports coming
+from that package.
+
 ## Multi-tenancy
 
 One database, many salons. Isolation is enforced twice:
